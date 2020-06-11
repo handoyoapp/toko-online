@@ -5,6 +5,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:toko_online/produk_detail.dart';
+import 'package:intl/intl.dart';
 
 void main() => runApp(MyApp());
 
@@ -37,6 +39,8 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     daftarProduk = fetchProduk();
   }
+
+  final formater = NumberFormat('#,##0.00', 'id');
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +92,18 @@ class _MyHomePageState extends State<MyHomePage> {
                               buildProdukSubtitle(produk, index),
                             ],
                           ),
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProdukDetail(
+                                  imageUrl: produk[index].image,
+                                  title: produk[index].namaBarang,
+                                  price: produk[index].harga,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       );
                     },
@@ -113,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
         children: <Widget>[
           Expanded(
             child: Text(
-              'Rp ${produk[index].harga}',
+              'Rp ' + formater.format(int.parse(produk[index].harga)),
               style: TextStyle(color: Colors.red),
             ),
           ),
@@ -137,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
   GridTile buildProdukImage(List<DaftarProduk> produk, int index) {
     return GridTile(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(4.0),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
         child: AspectRatio(
           aspectRatio: 1,
           child: Image.network(
@@ -155,6 +170,7 @@ Future<Produk> fetchProduk() async {
       .get('https://demo.belajaraplikasi.com/backend-ci/index.php/produk');
 
   if (response.statusCode == 200) {
+    debugPrint('Produk : ' + response.body);
     return Produk.fromJson(json.decode(response.body));
   } else {
     throw Exception('Failed to load produk');
