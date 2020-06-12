@@ -34,6 +34,24 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Future<Produk> daftarProduk;
 
+  Future<Produk> fetchProduk() async {
+    final response = await http
+        .get('https://demo.belajaraplikasi.com/backend-ci/index.php/produk');
+
+    if (response.statusCode == 200) {
+      debugPrint('Produk : ' + response.body);
+      return Produk.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load produk');
+    }
+  }
+
+  Future<void> refreshProduk() async {
+    setState(() {
+      daftarProduk = fetchProduk();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -48,77 +66,84 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Column(
-          children: <Widget>[
-            SizedBox(height: 10),
-            FutureBuilder<Produk>(
-              future: daftarProduk,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final produk = snapshot.data.daftarProduk;
-                  return GridView.builder(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    shrinkWrap: true,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: produk.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.7,
+      body: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    return RefreshIndicator(
+      onRefresh: () => refreshProduk(),
+      child: _listProduk(),
+    );
+  }
+
+  Widget _listProduk() {
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      children: <Widget>[
+        FutureBuilder<Produk>(
+          future: daftarProduk,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final produk = snapshot.data.daftarProduk;
+              return GridView.builder(
+                padding: const EdgeInsets.only(bottom: 6),
+                shrinkWrap: true,
+                physics: const BouncingScrollPhysics(),
+                itemCount: produk.length,
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 0.7,
+                ),
+                itemBuilder: (BuildContext context, int index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey[300],
+                          blurRadius: 5,
+                          spreadRadius: 0,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    itemBuilder: (BuildContext context, int index) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey[300],
-                              blurRadius: 5,
-                              spreadRadius: 0,
-                              offset: Offset(0, 2),
+                    child: GestureDetector(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          buildProdukImage(produk, index),
+                          buildProdukTitle(produk, index),
+                          buildProdukSubtitle(produk, index),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProdukDetail(
+                              imageUrl: produk[index].image,
+                              title: produk[index].namaBarang,
+                              price: produk[index].harga,
                             ),
-                          ],
-                        ),
-                        child: GestureDetector(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              buildProdukImage(produk, index),
-                              buildProdukTitle(produk, index),
-                              buildProdukSubtitle(produk, index),
-                            ],
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProdukDetail(
-                                  imageUrl: produk[index].image,
-                                  title: produk[index].namaBarang,
-                                  price: produk[index].harga,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   );
-                } else if (snapshot.hasError) {
-                  return Text('${snapshot.error}');
-                }
-                return Center(child: CircularProgressIndicator());
-              },
-            ),
-            SizedBox(height: 10),
-          ],
+                },
+              );
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+            return Center(child: CircularProgressIndicator());
+          },
         ),
-      ),
+      ],
     );
   }
 
@@ -163,18 +188,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
-  }
-}
-
-Future<Produk> fetchProduk() async {
-  final response = await http
-      .get('https://demo.belajaraplikasi.com/backend-ci/index.php/produk');
-
-  if (response.statusCode == 200) {
-    debugPrint('Produk : ' + response.body);
-    return Produk.fromJson(json.decode(response.body));
-  } else {
-    throw Exception('Failed to load produk');
   }
 }
 
