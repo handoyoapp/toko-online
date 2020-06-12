@@ -1,3 +1,7 @@
+//belajaraplikasi.com
+//2020-06-11
+//Membuat Detail Produk Seperti Aplikasi Tokopedia
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
