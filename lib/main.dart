@@ -59,6 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (snapshot.hasData) {
                   final produk = snapshot.data.daftarProduk;
                   return GridView.builder(
+                    padding: const EdgeInsets.only(bottom: 6),
                     shrinkWrap: true,
                     physics: const BouncingScrollPhysics(),
                     itemCount: produk.length,
